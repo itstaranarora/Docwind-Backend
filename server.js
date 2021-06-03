@@ -1,5 +1,8 @@
+const app = require("express")();
 const mongoose = require("mongoose");
 const Document = require("./Document");
+const cors = require("cors");
+const server = require("http").createServer(app);
 require("dotenv").config();
 
 mongoose.connect(process.env.DATABASE_URI, {
@@ -10,11 +13,19 @@ mongoose.connect(process.env.DATABASE_URI, {
 
 const defaultValue = "";
 
-const io = require("socket.io")(3001, {
+const io = require("socket.io")(server, {
   cors: {
-    origin: process.env.APP_URL,
+    origin: "*",
     methods: ["GET", "POST"],
   },
+});
+
+app.use(cors());
+
+const PORT = process.env.PORT || 3001;
+
+app.get("/", (req, res) => {
+  res.send("Running");
 });
 
 io.on("connection", (socket) => {
@@ -46,6 +57,8 @@ io.on("connection", (socket) => {
     });
   });
 });
+
+server.listen(PORT, () => console.log("Server is running on port " + PORT));
 
 async function findOrCreateDocument(id) {
   if (id == null) return;
